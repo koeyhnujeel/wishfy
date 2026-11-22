@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: wishfy
+
+  jpa:
+    open-in-view: false
