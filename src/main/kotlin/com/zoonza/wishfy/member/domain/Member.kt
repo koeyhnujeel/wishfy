@@ -1,5 +1,6 @@
 package com.zoonza.wishfy.member.domain
 
+import com.zoonza.wishfy.common.error.BusinessException
 import java.time.Instant
 
 class Member(
@@ -15,17 +16,33 @@ class Member(
         this.updatedAt = Instant.now()
     }
 
+    fun changePassword(
+        currentPassword: String,
+        newPassword: RawPassword,
+        passwordEncoder: PasswordEncoder
+    ) {
+        if (!verifyPassword(currentPassword, passwordEncoder)) {
+            throw BusinessException(MemberErrorCode.CURRENT_PASSWORD_MISMATCH)
+        }
+
+        this.encodedPassword = passwordEncoder.encode(newPassword.value)
+        this.updatedAt = Instant.now()
+    }
+
+    fun verifyPassword(input: String, passwordEncoder: PasswordEncoder): Boolean =
+        passwordEncoder.matches(input, this.encodedPassword)
+
     companion object {
         fun register(
             loginId: LoginId,
-            rawPassword: String,
+            rawPassword: RawPassword,
             nickname: Nickname,
             passwordEncoder: PasswordEncoder
         ): Member {
             val now = Instant.now()
             return Member(
                 loginId = loginId,
-                encodedPassword = passwordEncoder.encode(rawPassword),
+                encodedPassword = passwordEncoder.encode(rawPassword.value),
                 nickname = nickname,
                 createdAt = now,
                 updatedAt = now

@@ -9,6 +9,7 @@ import com.zoonza.wishfy.member.fake.FakePasswordEncoder
 import com.zoonza.wishfy.member.fixture.MemberFixture.member
 import com.zoonza.wishfy.member.fixture.RegisterMemberCommandFixture.registerMemberCommand
 import com.zoonza.wishfy.member.fixture.UpdateNicknameCommandFixture.updateNicknameCommand
+import com.zoonza.wishfy.member.fixture.UpdatePasswordCommandFixture.updatePasswordCommand
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -145,5 +146,76 @@ class MemberUpdateServiceTest {
         }
 
         memberRepository.findById(1L).shouldNotBeNull().nickname shouldBe Nickname("준자")
+    }
+
+    @Test
+    fun `비밀번호 형식이 올바르지 않으면 가입할 수 없다`() {
+        shouldThrow<IllegalArgumentException> {
+            memberUpdateService.register(registerMemberCommand(rawPassword = "password"))
+        }
+
+        memberRepository.count() shouldBe 0
+    }
+
+    @Test
+    fun `현재 비밀번호가 맞으면 새 비밀번호로 변경된다`() {
+        memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
+
+        memberUpdateService.updatePassword(
+            updatePasswordCommand(memberId = 1L, currentPassword = "oldPassword1234", newPassword = "newPassword1234")
+        )
+
+        val member = memberRepository.findById(1L).shouldNotBeNull()
+        passwordEncoder.matches("newPassword1234", member.encodedPassword) shouldBe true
+        passwordEncoder.matches("oldPassword1234", member.encodedPassword) shouldBe false
+    }
+
+    @Test
+    fun `현재 비밀번호가 틀리면 비밀번호를 변경할 수 없다`() {
+        memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
+
+        val exception = shouldThrow<BusinessException> {
+            memberUpdateService.updatePassword(
+                updatePasswordCommand(memberId = 1L, currentPassword = "wrongPassword1234")
+            )
+        }
+
+        exception.errorCode shouldBe MemberErrorCode.CURRENT_PASSWORD_MISMATCH
+        val member = memberRepository.findById(1L).shouldNotBeNull()
+        passwordEncoder.matches("oldPassword1234", member.encodedPassword) shouldBe true
+    }
+
+    @Test
+    fun `현재 비밀번호를 형식에 맞지 않게 입력해도 현재 비밀번호 불일치로 처리된다`() {
+        memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
+
+        val exception = shouldThrow<BusinessException> {
+            memberUpdateService.updatePassword(updatePasswordCommand(memberId = 1L, currentPassword = "abc"))
+        }
+
+        exception.errorCode shouldBe MemberErrorCode.CURRENT_PASSWORD_MISMATCH
+    }
+
+    @Test
+    fun `새 비밀번호 형식이 올바르지 않으면 비밀번호가 변경되지 않는다`() {
+        memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
+
+        shouldThrow<IllegalArgumentException> {
+            memberUpdateService.updatePassword(
+                updatePasswordCommand(memberId = 1L, currentPassword = "oldPassword1234", newPassword = "123456")
+            )
+        }
+
+        val member = memberRepository.findById(1L).shouldNotBeNull()
+        passwordEncoder.matches("oldPassword1234", member.encodedPassword) shouldBe true
+    }
+
+    @Test
+    fun `존재하지 않는 회원의 비밀번호는 변경할 수 없다`() {
+        val exception = shouldThrow<BusinessException> {
+            memberUpdateService.updatePassword(updatePasswordCommand(memberId = 999L))
+        }
+
+        exception.errorCode shouldBe MemberErrorCode.NOT_FOUND
     }
 }

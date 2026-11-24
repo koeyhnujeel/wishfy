@@ -3,6 +3,7 @@ package com.zoonza.wishfy.member.application
 import com.zoonza.wishfy.common.error.BusinessException
 import com.zoonza.wishfy.member.application.dto.RegisterMemberCommand
 import com.zoonza.wishfy.member.application.dto.UpdateNicknameCommand
+import com.zoonza.wishfy.member.application.dto.UpdatePasswordCommand
 import com.zoonza.wishfy.member.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -14,7 +15,7 @@ class MemberUpdateService(
 ) {
     fun register(command: RegisterMemberCommand) {
         val loginId = requireUniqueLoginId(command.loginId)
-        val rawPassword = command.rawPassword
+        val rawPassword = RawPassword(command.rawPassword)
         val nickname = Nickname(command.nickname)
         val member = Member.register(loginId, rawPassword, nickname, passwordEncoder)
 
@@ -23,11 +24,18 @@ class MemberUpdateService(
 
     @Transactional
     fun updateNickname(command: UpdateNicknameCommand) {
+        val member = getMemberBy(command.memberId)
         val newNickname = Nickname(command.newNickname)
-        val member = memberRepository.findById(command.memberId)
-            ?: throw BusinessException(MemberErrorCode.NOT_FOUND)
 
         member.changeNickname(newNickname)
+    }
+
+    @Transactional
+    fun updatePassword(command: UpdatePasswordCommand) {
+        val member = getMemberBy(command.memberId)
+        val newPassword = RawPassword(command.newPassword)
+
+        member.changePassword(command.currentPassword, newPassword, passwordEncoder)
     }
 
     private fun requireUniqueLoginId(loginId: String): LoginId {
@@ -39,4 +47,8 @@ class MemberUpdateService(
 
         return loginId
     }
+
+    private fun getMemberBy(memberId: Long): Member =
+        memberRepository.findById(memberId)
+            ?: throw BusinessException(MemberErrorCode.NOT_FOUND)
 }
