@@ -10,6 +10,11 @@ class Member(
     val createdAt: Instant,
     var updatedAt: Instant
 ) {
+    fun changeNickname(newNickname: Nickname) {
+        this.nickname = newNickname
+        this.updatedAt = Instant.now()
+    }
+
     companion object {
         fun register(
             loginId: LoginId,

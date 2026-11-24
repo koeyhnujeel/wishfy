@@ -1,6 +1,8 @@
 package com.zoonza.wishfy.member.domain
 
 import com.zoonza.wishfy.member.fake.FakePasswordEncoder
+import com.zoonza.wishfy.member.fixture.MemberFixture.member
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
@@ -44,5 +46,34 @@ class MemberTest {
         val member = register()
 
         member.id shouldBe 0L
+    }
+
+    @Test
+    fun `닉네임을 변경하면 새 닉네임으로 바뀐다`() {
+        val member = member(nickname = "준자")
+
+        member.changeNickname(Nickname("새닉네임"))
+
+        member.nickname shouldBe Nickname("새닉네임")
+    }
+
+    @Test
+    fun `닉네임을 변경하면 수정 시각이 갱신된다`() {
+        val member = member()
+        val beforeUpdatedAt = member.updatedAt
+
+        member.changeNickname(Nickname("새닉네임"))
+
+        member.updatedAt shouldBeGreaterThan beforeUpdatedAt
+    }
+
+    @Test
+    fun `닉네임을 변경해도 생성 시각은 바뀌지 않는다`() {
+        val member = member()
+        val createdAt = member.createdAt
+
+        member.changeNickname(Nickname("새닉네임"))
+
+        member.createdAt shouldBe createdAt
     }
 }

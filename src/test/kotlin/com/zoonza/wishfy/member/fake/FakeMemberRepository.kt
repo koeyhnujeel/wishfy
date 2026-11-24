@@ -18,6 +18,8 @@ class FakeMemberRepository : MemberRepository {
         return saved
     }
 
+    override fun findById(id: Long): Member? = members[id]
+
     fun findByLoginId(loginId: LoginId): Member? =
         members.values.find { it.loginId == loginId }
 

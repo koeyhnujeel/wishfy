@@ -1,12 +1,11 @@
 package com.zoonza.wishfy.member.application
 
+import com.zoonza.wishfy.common.error.BusinessException
 import com.zoonza.wishfy.member.application.dto.RegisterMemberCommand
-import com.zoonza.wishfy.member.domain.LoginId
-import com.zoonza.wishfy.member.domain.Member
-import com.zoonza.wishfy.member.domain.MemberRepository
-import com.zoonza.wishfy.member.domain.Nickname
-import com.zoonza.wishfy.member.domain.PasswordEncoder
+import com.zoonza.wishfy.member.application.dto.UpdateNicknameCommand
+import com.zoonza.wishfy.member.domain.*
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MemberUpdateService(
@@ -22,11 +21,20 @@ class MemberUpdateService(
         memberRepository.save(member)
     }
 
+    @Transactional
+    fun updateNickname(command: UpdateNicknameCommand) {
+        val newNickname = Nickname(command.newNickname)
+        val member = memberRepository.findById(command.memberId)
+            ?: throw BusinessException(MemberErrorCode.NOT_FOUND)
+
+        member.changeNickname(newNickname)
+    }
+
     private fun requireUniqueLoginId(loginId: String): LoginId {
         val loginId = LoginId(loginId.lowercase())
 
         if (memberRepository.existsByLoginId(loginId)) {
-            throw IllegalArgumentException("이미 사용 중인 아이디입니다.")
+            throw BusinessException(MemberErrorCode.LOGIN_ID_ALREADY_EXISTS)
         }
 
         return loginId
