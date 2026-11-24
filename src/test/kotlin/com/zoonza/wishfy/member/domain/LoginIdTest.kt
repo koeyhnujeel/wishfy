@@ -53,8 +53,13 @@ class LoginIdTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["Zoonza", "ZOONZA", "zoonzA"])
-    fun `영문 대문자가 포함된 아이디는 생성할 수 없다`(value: String) {
-        shouldThrow<IllegalArgumentException> { LoginId(value) }
+    fun `영문 대문자가 포함된 아이디는 소문자로 바뀌어 생성된다`(value: String) {
+        LoginId(value).value shouldBe "zoonza"
+    }
+
+    @Test
+    fun `대소문자만 다른 아이디는 동등하다`() {
+        LoginId("ZoonZa") shouldBe LoginId("zoonza")
     }
 
     @ParameterizedTest

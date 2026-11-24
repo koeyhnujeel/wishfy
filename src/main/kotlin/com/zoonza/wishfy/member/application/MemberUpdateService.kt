@@ -39,7 +39,7 @@ class MemberUpdateService(
     }
 
     private fun requireUniqueLoginId(loginId: String): LoginId {
-        val loginId = LoginId(loginId.lowercase())
+        val loginId = LoginId(loginId)
 
         if (memberRepository.existsByLoginId(loginId)) {
             throw BusinessException(MemberErrorCode.LOGIN_ID_ALREADY_EXISTS)
