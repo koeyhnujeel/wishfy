@@ -16,21 +16,21 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class MemberUpdateServiceTest {
+class MemberCommandServiceTest {
     private lateinit var memberRepository: FakeMemberRepository
     private lateinit var passwordEncoder: FakePasswordEncoder
-    private lateinit var memberUpdateService: MemberUpdateService
+    private lateinit var memberCommandService: MemberCommandService
 
     @BeforeEach
     fun setUp() {
         memberRepository = FakeMemberRepository()
         passwordEncoder = FakePasswordEncoder()
-        memberUpdateService = MemberUpdateService(passwordEncoder, memberRepository)
+        memberCommandService = MemberCommandService(passwordEncoder, memberRepository)
     }
 
     @Test
     fun `회원가입하면 회원이 저장된다`() {
-        memberUpdateService.register(registerMemberCommand(loginId = "zoonza", nickname = "준자"))
+        memberCommandService.register(registerMemberCommand(loginId = "zoonza", nickname = "준자"))
 
         val saved = memberRepository.findByLoginId(LoginId("zoonza")).shouldNotBeNull()
         saved.nickname shouldBe Nickname("준자")
@@ -38,7 +38,7 @@ class MemberUpdateServiceTest {
 
     @Test
     fun `회원가입하면 비밀번호가 인코딩되어 저장된다`() {
-        memberUpdateService.register(registerMemberCommand(loginId = "zoonza", rawPassword = "password1234"))
+        memberCommandService.register(registerMemberCommand(loginId = "zoonza", rawPassword = "password1234"))
 
         val saved = memberRepository.findByLoginId(LoginId("zoonza")).shouldNotBeNull()
         passwordEncoder.matches("password1234", saved.encodedPassword) shouldBe true
@@ -46,7 +46,7 @@ class MemberUpdateServiceTest {
 
     @Test
     fun `대문자가 섞인 아이디로 가입하면 소문자로 바뀌어 저장된다`() {
-        memberUpdateService.register(registerMemberCommand(loginId = "ZoonZa"))
+        memberCommandService.register(registerMemberCommand(loginId = "ZoonZa"))
 
         memberRepository.findByLoginId(LoginId("zoonza")).shouldNotBeNull()
     }
@@ -56,7 +56,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(loginId = "zoonza"))
 
         val exception = shouldThrow<BusinessException> {
-            memberUpdateService.register(registerMemberCommand(loginId = "zoonza"))
+            memberCommandService.register(registerMemberCommand(loginId = "zoonza"))
         }
 
         exception.errorCode shouldBe MemberErrorCode.LOGIN_ID_ALREADY_EXISTS
@@ -67,7 +67,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(loginId = "zoonza"))
 
         val exception = shouldThrow<BusinessException> {
-            memberUpdateService.register(registerMemberCommand(loginId = "ZOONZA"))
+            memberCommandService.register(registerMemberCommand(loginId = "ZOONZA"))
         }
 
         exception.errorCode shouldBe MemberErrorCode.LOGIN_ID_ALREADY_EXISTS
@@ -77,7 +77,7 @@ class MemberUpdateServiceTest {
     fun `아이디가 중복되면 회원이 저장되지 않는다`() {
         memberRepository.save(member(loginId = "zoonza"))
 
-        runCatching { memberUpdateService.register(registerMemberCommand(loginId = "zoonza")) }
+        runCatching { memberCommandService.register(registerMemberCommand(loginId = "zoonza")) }
 
         memberRepository.count() shouldBe 1
     }
@@ -86,7 +86,7 @@ class MemberUpdateServiceTest {
     fun `닉네임이 같아도 아이디가 다르면 가입할 수 있다`() {
         memberRepository.save(member(loginId = "zoonza", nickname = "준자"))
 
-        memberUpdateService.register(registerMemberCommand(loginId = "another", nickname = "준자"))
+        memberCommandService.register(registerMemberCommand(loginId = "another", nickname = "준자"))
 
         memberRepository.count() shouldBe 2
     }
@@ -94,7 +94,7 @@ class MemberUpdateServiceTest {
     @Test
     fun `아이디 형식이 올바르지 않으면 가입할 수 없다`() {
         shouldThrow<IllegalArgumentException> {
-            memberUpdateService.register(registerMemberCommand(loginId = "zz"))
+            memberCommandService.register(registerMemberCommand(loginId = "zz"))
         }
 
         memberRepository.count() shouldBe 0
@@ -103,7 +103,7 @@ class MemberUpdateServiceTest {
     @Test
     fun `닉네임 형식이 올바르지 않으면 가입할 수 없다`() {
         shouldThrow<IllegalArgumentException> {
-            memberUpdateService.register(registerMemberCommand(nickname = "준자!"))
+            memberCommandService.register(registerMemberCommand(nickname = "준자!"))
         }
 
         memberRepository.count() shouldBe 0
@@ -113,7 +113,7 @@ class MemberUpdateServiceTest {
     fun `닉네임을 변경하면 회원의 닉네임이 바뀐다`() {
         memberRepository.save(member(id = 1L, nickname = "준자"))
 
-        memberUpdateService.updateNickname(updateNicknameCommand(memberId = 1L, newNickname = "새닉네임"))
+        memberCommandService.updateNickname(updateNicknameCommand(memberId = 1L, newNickname = "새닉네임"))
 
         memberRepository.findById(1L).shouldNotBeNull().nickname shouldBe Nickname("새닉네임")
     }
@@ -123,7 +123,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(id = 1L, loginId = "zoonza", nickname = "준자"))
         memberRepository.save(member(id = 2L, loginId = "another", nickname = "다른사람"))
 
-        memberUpdateService.updateNickname(updateNicknameCommand(memberId = 2L, newNickname = "준자"))
+        memberCommandService.updateNickname(updateNicknameCommand(memberId = 2L, newNickname = "준자"))
 
         memberRepository.findById(2L).shouldNotBeNull().nickname shouldBe Nickname("준자")
     }
@@ -131,7 +131,7 @@ class MemberUpdateServiceTest {
     @Test
     fun `존재하지 않는 회원의 닉네임은 변경할 수 없다`() {
         val exception = shouldThrow<BusinessException> {
-            memberUpdateService.updateNickname(updateNicknameCommand(memberId = 999L))
+            memberCommandService.updateNickname(updateNicknameCommand(memberId = 999L))
         }
 
         exception.errorCode shouldBe MemberErrorCode.NOT_FOUND
@@ -142,7 +142,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(id = 1L, nickname = "준자"))
 
         shouldThrow<IllegalArgumentException> {
-            memberUpdateService.updateNickname(updateNicknameCommand(memberId = 1L, newNickname = "준자!"))
+            memberCommandService.updateNickname(updateNicknameCommand(memberId = 1L, newNickname = "준자!"))
         }
 
         memberRepository.findById(1L).shouldNotBeNull().nickname shouldBe Nickname("준자")
@@ -151,7 +151,7 @@ class MemberUpdateServiceTest {
     @Test
     fun `비밀번호 형식이 올바르지 않으면 가입할 수 없다`() {
         shouldThrow<IllegalArgumentException> {
-            memberUpdateService.register(registerMemberCommand(rawPassword = "password"))
+            memberCommandService.register(registerMemberCommand(rawPassword = "password"))
         }
 
         memberRepository.count() shouldBe 0
@@ -161,7 +161,7 @@ class MemberUpdateServiceTest {
     fun `현재 비밀번호가 맞으면 새 비밀번호로 변경된다`() {
         memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
 
-        memberUpdateService.updatePassword(
+        memberCommandService.updatePassword(
             updatePasswordCommand(memberId = 1L, currentPassword = "oldPassword1234", newPassword = "newPassword1234")
         )
 
@@ -175,7 +175,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
 
         val exception = shouldThrow<BusinessException> {
-            memberUpdateService.updatePassword(
+            memberCommandService.updatePassword(
                 updatePasswordCommand(memberId = 1L, currentPassword = "wrongPassword1234")
             )
         }
@@ -190,7 +190,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
 
         val exception = shouldThrow<BusinessException> {
-            memberUpdateService.updatePassword(updatePasswordCommand(memberId = 1L, currentPassword = "abc"))
+            memberCommandService.updatePassword(updatePasswordCommand(memberId = 1L, currentPassword = "abc"))
         }
 
         exception.errorCode shouldBe MemberErrorCode.CURRENT_PASSWORD_MISMATCH
@@ -201,7 +201,7 @@ class MemberUpdateServiceTest {
         memberRepository.save(member(id = 1L, encodedPassword = passwordEncoder.encode("oldPassword1234")))
 
         shouldThrow<IllegalArgumentException> {
-            memberUpdateService.updatePassword(
+            memberCommandService.updatePassword(
                 updatePasswordCommand(memberId = 1L, currentPassword = "oldPassword1234", newPassword = "123456")
             )
         }
@@ -213,7 +213,7 @@ class MemberUpdateServiceTest {
     @Test
     fun `존재하지 않는 회원의 비밀번호는 변경할 수 없다`() {
         val exception = shouldThrow<BusinessException> {
-            memberUpdateService.updatePassword(updatePasswordCommand(memberId = 999L))
+            memberCommandService.updatePassword(updatePasswordCommand(memberId = 999L))
         }
 
         exception.errorCode shouldBe MemberErrorCode.NOT_FOUND

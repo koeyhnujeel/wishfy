@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class MemberUpdateService(
+class MemberCommandService(
     private val passwordEncoder: PasswordEncoder,
     private val memberRepository: MemberRepository
 ) {
