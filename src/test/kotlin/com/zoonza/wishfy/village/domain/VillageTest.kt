@@ -13,6 +13,7 @@ class VillageTest {
 
     private val createdAt = Instant.parse("2026-11-26T09:00:00Z")
     private val joinedAt = Instant.parse("2026-11-26T10:00:00Z")
+    private val leftAt = Instant.parse("2026-11-26T11:00:00Z")
 
     // ---------- 마을 생성 ----------
 
@@ -67,7 +68,7 @@ class VillageTest {
     fun `주민을 추가하면 마을의 주민이 된다`() {
         val village = village(ownerId = 1L)
 
-        village.addResident(memberId = 2L, joinedAt = joinedAt)
+        village.join(memberId = 2L, joinedAt = joinedAt)
 
         village.residents.map { it.memberId } shouldContainExactly listOf(1L, 2L)
     }
@@ -76,7 +77,7 @@ class VillageTest {
     fun `주민을 추가하면 참여 시각이 기록되고 마을의 수정 시각도 같은 시각으로 갱신된다`() {
         val village = village(ownerId = 1L)
 
-        village.addResident(memberId = 2L, joinedAt = joinedAt)
+        village.join(memberId = 2L, joinedAt = joinedAt)
 
         village.residents.single { it.isSameMember(2L) }.joinedAt shouldBe joinedAt
         village.updatedAt shouldBe joinedAt
@@ -86,7 +87,7 @@ class VillageTest {
     fun `이미 주민인 회원은 다시 추가할 수 없다`() {
         val village = village(ownerId = 1L, residentIds = listOf(1L, 2L))
 
-        val exception = shouldThrow<BusinessException> { village.addResident(memberId = 2L) }
+        val exception = shouldThrow<BusinessException> { village.join(memberId = 2L) }
 
         exception.errorCode shouldBe VillageErrorCode.ALREADY_RESIDENT
     }
@@ -95,7 +96,7 @@ class VillageTest {
     fun `촌장도 이미 주민이므로 다시 추가할 수 없다`() {
         val village = village(ownerId = 1L)
 
-        val exception = shouldThrow<BusinessException> { village.addResident(memberId = 1L) }
+        val exception = shouldThrow<BusinessException> { village.join(memberId = 1L) }
 
         exception.errorCode shouldBe VillageErrorCode.ALREADY_RESIDENT
     }
@@ -104,7 +105,7 @@ class VillageTest {
     fun `촌장을 포함해 주민이 4명이면 한 명 더 추가할 수 있다`() {
         val village = village(ownerId = 1L, residentIds = listOf(1L, 2L, 3L, 4L))
 
-        village.addResident(memberId = 5L)
+        village.join(memberId = 5L)
 
         village.residents shouldHaveSize 5
     }
@@ -113,7 +114,7 @@ class VillageTest {
     fun `촌장을 포함해 주민이 5명이면 더 추가할 수 없다`() {
         val village = village(ownerId = 1L, residentIds = listOf(1L, 2L, 3L, 4L, 5L))
 
-        val exception = shouldThrow<BusinessException> { village.addResident(memberId = 6L) }
+        val exception = shouldThrow<BusinessException> { village.join(memberId = 6L) }
 
         exception.errorCode shouldBe VillageErrorCode.RESIDENT_LIMIT_REACHED
     }
@@ -122,7 +123,7 @@ class VillageTest {
     fun `정원이 찬 마을에 이미 주민인 회원이 참여하면 중복 참여로 처리된다`() {
         val village = village(ownerId = 1L, residentIds = listOf(1L, 2L, 3L, 4L, 5L))
 
-        val exception = shouldThrow<BusinessException> { village.addResident(memberId = 3L) }
+        val exception = shouldThrow<BusinessException> { village.join(memberId = 3L) }
 
         exception.errorCode shouldBe VillageErrorCode.ALREADY_RESIDENT
     }
@@ -132,9 +133,67 @@ class VillageTest {
         val village = village(ownerId = 1L, residentIds = listOf(1L, 2L, 3L, 4L, 5L))
         val beforeUpdatedAt = village.updatedAt
 
-        runCatching { village.addResident(memberId = 6L, joinedAt = joinedAt) }
+        runCatching { village.join(memberId = 6L, joinedAt = joinedAt) }
 
         village.residents shouldHaveSize 5
         village.updatedAt shouldBe beforeUpdatedAt
+    }
+
+    // ---------- 마을 나가기 ----------
+
+    @Test
+    fun `주민이 마을을 나가면 주민 목록에서 빠진다`() {
+        val village = village(ownerId = 1L, residentIds = listOf(1L, 2L, 3L))
+
+        village.leave(memberId = 2L, leaveAt = leftAt)
+
+        village.residents.map { it.memberId } shouldContainExactly listOf(1L, 3L)
+    }
+
+    @Test
+    fun `주민이 마을을 나가면 마을의 수정 시각이 나간 시각으로 갱신된다`() {
+        val village = village(ownerId = 1L, residentIds = listOf(1L, 2L))
+
+        village.leave(memberId = 2L, leaveAt = leftAt)
+
+        village.updatedAt shouldBe leftAt
+    }
+
+    @Test
+    fun `촌장은 다른 주민이 있으면 마을을 나갈 수 없다`() {
+        val village = village(ownerId = 1L, residentIds = listOf(1L, 2L))
+
+        val exception = shouldThrow<BusinessException> { village.leave(memberId = 1L) }
+
+        exception.errorCode shouldBe VillageErrorCode.OWNER_CANNOT_LEAVE
+    }
+
+    @Test
+    fun `촌장은 혼자 남아 있어도 마을을 나갈 수 없다`() {
+        val village = village(ownerId = 1L)
+
+        val exception = shouldThrow<BusinessException> { village.leave(memberId = 1L) }
+
+        exception.errorCode shouldBe VillageErrorCode.OWNER_CANNOT_LEAVE
+    }
+
+    @Test
+    fun `촌장이 나가기에 실패하면 주민 목록과 수정 시각이 그대로 유지된다`() {
+        val village = village(ownerId = 1L, residentIds = listOf(1L, 2L))
+        val beforeUpdatedAt = village.updatedAt
+
+        runCatching { village.leave(memberId = 1L, leaveAt = leftAt) }
+
+        village.residents.map { it.memberId } shouldContainExactly listOf(1L, 2L)
+        village.updatedAt shouldBe beforeUpdatedAt
+    }
+
+    @Test
+    fun `주민이 아닌 회원이 나가도 주민 목록은 바뀌지 않는다`() {
+        val village = village(ownerId = 1L, residentIds = listOf(1L, 2L))
+
+        village.leave(memberId = 99L, leaveAt = leftAt)
+
+        village.residents.map { it.memberId } shouldContainExactly listOf(1L, 2L)
     }
 }

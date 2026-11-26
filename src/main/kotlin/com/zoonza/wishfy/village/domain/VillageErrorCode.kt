@@ -10,4 +10,6 @@ enum class VillageErrorCode(
     CREATION_LIMIT_REACHED("VILLAGE-001", "마을은 최대 3개까지 만들 수 있습니다.", 409),
     RESIDENT_LIMIT_REACHED("VILLAGE-002", "마을 주민은 최대 5명까지 참여할 수 있습니다.", 409),
     ALREADY_RESIDENT("VILLAGE-003", "이미 참여 중인 마을입니다.", 409),
+    NOT_FOUND("VILLAGE-004", "마을 정보를 찾을 수 없습니다.", 404),
+    OWNER_CANNOT_LEAVE("VILLAGE-005", "촌장은 마을을 나갈 수 없습니다. 촌장을 위임하거나 마을을 삭제해 주세요.", 409),
 }

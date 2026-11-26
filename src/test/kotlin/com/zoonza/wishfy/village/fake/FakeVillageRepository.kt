@@ -17,6 +17,8 @@ class FakeVillageRepository : VillageRepository {
         return saved
     }
 
+    override fun findById(id: Long): Village? = villages[id]
+
     fun findAllByOwnerId(ownerId: Long): List<Village> =
         villages.values.filter { it.ownerId == ownerId }
 

@@ -11,7 +11,7 @@ class Village(
     val createdAt: Instant,
     var updatedAt: Instant,
 ) {
-    fun addResident(memberId: Long, joinedAt: Instant = Instant.now()) {
+    fun join(memberId: Long, joinedAt: Instant = Instant.now()) {
         if (this.residents.any { it.isSameMember(memberId) }) {
             throw BusinessException(VillageErrorCode.ALREADY_RESIDENT)
         }
@@ -22,6 +22,15 @@ class Village(
 
         this.residents.add(Resident(memberId, joinedAt))
         this.updatedAt = joinedAt
+    }
+
+    fun leave(memberId: Long, leaveAt: Instant = Instant.now()) {
+        if (ownerId == memberId) {
+            throw BusinessException(VillageErrorCode.OWNER_CANNOT_LEAVE)
+        }
+
+        this.residents.removeIf { it.isSameMember(memberId) }
+        this.updatedAt = leaveAt
     }
 
     companion object {
