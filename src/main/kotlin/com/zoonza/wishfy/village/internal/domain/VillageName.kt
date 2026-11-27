@@ -1,4 +1,4 @@
-package com.zoonza.wishfy.village.domain
+package com.zoonza.wishfy.village.internal.domain
 
 data class VillageName(val value: String) {
     init {

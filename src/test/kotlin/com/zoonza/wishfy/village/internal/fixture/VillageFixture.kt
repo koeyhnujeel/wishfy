@@ -1,8 +1,8 @@
-package com.zoonza.wishfy.village.fixture
+package com.zoonza.wishfy.village.internal.fixture
 
-import com.zoonza.wishfy.village.domain.Resident
-import com.zoonza.wishfy.village.domain.Village
-import com.zoonza.wishfy.village.domain.VillageName
+import com.zoonza.wishfy.village.internal.domain.Resident
+import com.zoonza.wishfy.village.internal.domain.Village
+import com.zoonza.wishfy.village.internal.domain.VillageName
 import java.time.Instant
 
 object VillageFixture {

@@ -1,4 +1,4 @@
-package com.zoonza.wishfy.village.domain
+package com.zoonza.wishfy.village.internal.domain
 
 interface VillageRepository {
     fun countByOwnerId(ownerId: Long): Long

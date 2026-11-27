@@ -1,6 +1,6 @@
-package com.zoonza.wishfy.village.fixture
+package com.zoonza.wishfy.village.internal.fixture
 
-import com.zoonza.wishfy.village.application.dto.CreateVillageCommand
+import com.zoonza.wishfy.village.internal.application.dto.CreateVillageCommand
 
 object CreateVillageCommandFixture {
     fun createVillageCommand(

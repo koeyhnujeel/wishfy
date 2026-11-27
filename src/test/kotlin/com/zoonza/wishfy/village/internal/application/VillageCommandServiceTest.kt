@@ -1,11 +1,11 @@
-package com.zoonza.wishfy.village.application
+package com.zoonza.wishfy.village.internal.application
 
 import com.zoonza.wishfy.common.error.BusinessException
-import com.zoonza.wishfy.village.domain.VillageErrorCode
-import com.zoonza.wishfy.village.domain.VillageName
-import com.zoonza.wishfy.village.fake.FakeVillageRepository
-import com.zoonza.wishfy.village.fixture.CreateVillageCommandFixture.createVillageCommand
-import com.zoonza.wishfy.village.fixture.VillageFixture.village
+import com.zoonza.wishfy.village.internal.domain.VillageErrorCode
+import com.zoonza.wishfy.village.internal.domain.VillageName
+import com.zoonza.wishfy.village.internal.fake.FakeVillageRepository
+import com.zoonza.wishfy.village.internal.fixture.CreateVillageCommandFixture.createVillageCommand
+import com.zoonza.wishfy.village.internal.fixture.VillageFixture.village
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

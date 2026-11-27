@@ -1,7 +1,7 @@
-package com.zoonza.wishfy.village.domain
+package com.zoonza.wishfy.village.internal.domain
 
 import com.zoonza.wishfy.common.error.BusinessException
-import com.zoonza.wishfy.village.fixture.VillageFixture.village
+import com.zoonza.wishfy.village.internal.fixture.VillageFixture.village
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize

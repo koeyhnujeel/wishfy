@@ -1,13 +1,13 @@
-package com.zoonza.wishfy.village.application
+package com.zoonza.wishfy.village.internal.application
 
 import com.zoonza.wishfy.common.error.BusinessException
-import com.zoonza.wishfy.village.application.dto.CreateVillageCommand
-import com.zoonza.wishfy.village.application.dto.JoinVillageCommand
-import com.zoonza.wishfy.village.application.dto.LeaveVillageCommand
-import com.zoonza.wishfy.village.domain.Village
-import com.zoonza.wishfy.village.domain.VillageErrorCode
-import com.zoonza.wishfy.village.domain.VillageName
-import com.zoonza.wishfy.village.domain.VillageRepository
+import com.zoonza.wishfy.village.internal.application.dto.CreateVillageCommand
+import com.zoonza.wishfy.village.internal.application.dto.JoinVillageCommand
+import com.zoonza.wishfy.village.internal.application.dto.LeaveVillageCommand
+import com.zoonza.wishfy.village.internal.domain.Village
+import com.zoonza.wishfy.village.internal.domain.VillageErrorCode
+import com.zoonza.wishfy.village.internal.domain.VillageName
+import com.zoonza.wishfy.village.internal.domain.VillageRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

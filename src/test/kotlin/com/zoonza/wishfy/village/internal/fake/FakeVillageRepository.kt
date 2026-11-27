@@ -1,7 +1,7 @@
-package com.zoonza.wishfy.village.fake
+package com.zoonza.wishfy.village.internal.fake
 
-import com.zoonza.wishfy.village.domain.Village
-import com.zoonza.wishfy.village.domain.VillageRepository
+import com.zoonza.wishfy.village.internal.domain.Village
+import com.zoonza.wishfy.village.internal.domain.VillageRepository
 
 class FakeVillageRepository : VillageRepository {
     private val villages = mutableMapOf<Long, Village>()

@@ -1,4 +1,4 @@
-package com.zoonza.wishfy.village.domain
+package com.zoonza.wishfy.village.internal.domain
 
 import com.zoonza.wishfy.common.error.BusinessException
 import java.time.Instant

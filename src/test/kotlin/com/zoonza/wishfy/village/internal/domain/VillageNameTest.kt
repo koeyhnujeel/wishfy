@@ -1,4 +1,4 @@
-package com.zoonza.wishfy.village.domain
+package com.zoonza.wishfy.village.internal.domain
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
